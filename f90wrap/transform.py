@@ -571,44 +571,44 @@ class ArrayDimensionConverter(ft.FortranVisitor):
         return ds
 
     def visit_Procedure(self, node):
-
+        # we trust the user in that they have defined the array dimension properly for intent(out) array.
+        # dimension(a,b) such that a and b are input variable for the routine
         n_dummy = 0
         for arg in node.arguments:
-            dims = [attr for attr in arg.attributes if attr.startswith('dimension')]
-            if dims == []:
-                continue
-            if len(dims) != 1:
-                raise ValueError('more than one dimension attribute found for arg %s' % arg.name)
-
-            ds = ArrayDimensionConverter.split_dimensions(dims[0])
-
-            new_dummy_args = []
-            new_ds = []
-            for i, d in enumerate(ds):
-                if ArrayDimensionConverter.valid_dim_re.match(d):
-                    if d.startswith('len'):
-                        arg.f2py_line = ('!f2py %s %s, dimension(%s) :: %s' % \
-                                         (arg.type,
-                                          ','.join(
-                                              [attr for attr in arg.attributes if not attr.startswith('dimension')]),
-                                          d.replace('len', 'slen'), arg.name))
-                    new_ds.append(d)
+            if 'intent(out)' not in arg.attributes:
+                dims = [attr for attr in arg.attributes if attr.startswith('dimension')]
+                if dims == []:
                     continue
-                dummy_arg = ft.Argument(name='n%d' % n_dummy, type='integer', attributes=['intent(hide)'])
+                if len(dims) != 1:
+                    raise ValueError('more than one dimension attribute found for arg %s' % arg.name)
 
-                if 'intent(out)' not in arg.attributes:
+                ds = ArrayDimensionConverter.split_dimensions(dims[0])
+
+                new_dummy_args = []
+                new_ds = []
+                for i, d in enumerate(ds):
+                    if ArrayDimensionConverter.valid_dim_re.match(d):
+                        if d.startswith('len'):
+                            arg.f2py_line = ('!f2py %s %s, dimension(%s) :: %s' % \
+                                            (arg.type,
+                                            ','.join(
+                                                [attr for attr in arg.attributes if not attr.startswith('dimension')]),
+                                            d.replace('len', 'slen'), arg.name))
+                        new_ds.append(d)
+                        continue
+                    dummy_arg = ft.Argument(name='n%d' % n_dummy, type='integer', attributes=['intent(hide)'])
                     dummy_arg.f2py_line = ('!f2py intent(hide), depend(%s) :: %s = shape(%s,%d)' %
-                                           (arg.name, dummy_arg.name, arg.name, i))
-                new_dummy_args.append(dummy_arg)
-                new_ds.append(dummy_arg.name)
-                n_dummy += 1
+                                            (arg.name, dummy_arg.name, arg.name, i))
+                    new_dummy_args.append(dummy_arg)
+                    new_ds.append(dummy_arg.name)
+                    n_dummy += 1
 
-            if new_dummy_args != []:
-                logging.debug('adding dummy arguments %r to %s' % (new_dummy_args, node.name))
-                arg.attributes = ([attr for attr in arg.attributes if not attr.startswith('dimension')] +
-                                  ['dimension(%s)' % ','.join(new_ds)])
-                node.arguments.extend(new_dummy_args)
-
+                if new_dummy_args != []:
+                    logging.debug('adding dummy arguments %r to %s' % (new_dummy_args, node.name))
+                    arg.attributes = ([attr for attr in arg.attributes if not attr.startswith('dimension')] +
+                                    ['dimension(%s)' % ','.join(new_ds)])
+                    node.arguments.extend(new_dummy_args)
+        
 
 class MethodFinder(ft.FortranTransformer):
     def __init__(self, types, constructor_names, destructor_names, short_names,
