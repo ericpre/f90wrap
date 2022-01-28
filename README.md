@@ -1,7 +1,7 @@
 f90wrap: Fortran to Python interface generator with derived type support
 ========================================================================
 
-[![Build Status](https://travis-ci.org/jameskermode/f90wrap.svg?branch=master)](https://travis-ci.org/jameskermode/f90wrap)
+![Build Status](https://github.com/jameskermode/f90wrap/actions/workflows/python-package.yml/badge.svg)
 
 f90wrap is a tool to automatically generate Python extension modules
 which interface to Fortran code that makes use of derived types. It
@@ -12,7 +12,7 @@ suitable for wrapping with f2py, together with a higher-level Pythonic
 wrapper that makes the existance of an additional layer transparent to
 the final user.
 
-Copyright (C) James Kermode 2011-2018. Released under the GNU Lesser General
+Copyright (C) James Kermode 2011-2021. Released under the GNU Lesser General
 Public License, version 3. Parts originally based on f90doc - automatic
 documentation generator for Fortran 90. Copyright (C) 2004 Ian Rutt.
 
@@ -22,31 +22,76 @@ please contact James Kermode <james.kermode@gmail.com>
 Dependencies
 ------------
 
- 1.  [Python](http://www.python.org) \>= 2.7 or 3.x (both now supported!)
+ 1.  [Python](http://www.python.org) 3.6+ (Python 2.7 no longer supported)
  2.  Recent version of [numpy](http://www.numpy.org) which includes `f2py`
  3.  Fortran compiler - tested with `gfortran` 4.6+ and recent `ifort` 12+
 
 Installation
 ------------
 
-For the latest stable release, install with either `pip` or `conda`:
+For the latest stable release, install with `pip`:
 
 ```
 pip install f90wrap
 ```
 
+There is also a [conda package](https://anaconda.org/conda-forge/f90wrap) on conda-forge:
+
+```
+conda install -c conda-forge f90wrap
+```
+
 For the development version, installation is as follows:
 
-    git clone https://github.com/jameskermode/f90wrap
-    cd f90wrap
-    python setup.py install [--prefix PREFIX]
-    
+```
+pip install git+https://github.com/jameskermode/f90wrap
+```
+
+Note that if your Fortran 90 compiler has a non-standard name
+(e.g. gfortran-9) then you need to set the `F90` environment variable
+prior to installing f90wrap to ensure it uses the correct one, e.g.
+
+```
+F90=gfortran-9 pip install f90wrap
+```
 
 Examples and Testing
 --------------------
 
 To test the installation, run `make test` from the `examples/`
 directory. You may find the code in the various examples useful.
+
+Citing f90wrap
+--------------
+
+If you find `f90wrap` useful in academic work, please cite the following
+(open access) publication:
+
+> J. R. Kermode, f90wrap: an automated tool for constructing 
+> deep Python interfaces to modern Fortran codes. 
+> J. Phys. Condens. Matter (2020) 
+>[doi:10.1088/1361-648X/ab82d2](https://dx.doi.org/10.1088/1361-648X/ab82d2)
+
+BibTeX entry:
+
+```bibtex
+
+@ARTICLE{Kermode2020-f90wrap,
+  title    = "f90wrap: an automated tool for constructing deep Python
+              interfaces to modern Fortran codes",
+  author   = "Kermode, James R",
+  journal  = "J. Phys. Condens. Matter",
+  month    =  mar,
+  year     =  2020,
+  keywords = "Fortran; Interfacing; Interoperability; Python; Wrapping codes;
+              f2py",
+  language = "en",
+  issn     = "0953-8984, 1361-648X",
+  pmid     = "32209737",
+  doi      = "10.1088/1361-648X/ab82d2"
+}
+
+```
 
 Case studies
 ------------
@@ -57,7 +102,8 @@ applications:
  - [QUIP](http://libatoms.github.io/QUIP/) - molecular dynamics code
  - [CASTEP](http://www.castep.org) - electronic structure code
 
-See this [IPython notebook](http://nbviewer.ipython.org/github/jameskermode/f90wrap/blob/master/docs/tutorials/kermode-csc-warwick-nov-2015.ipynb) from a recent seminar for more details.
+See this [Jupyter notebook](https://github.com/jameskermode/f90wrap/blob/master/docs/tutorials/f90wrap-demo-feb-2020.ipynb) 
+from a recent seminar for more details.
 
 Usage
 -----
@@ -130,7 +176,7 @@ allow it to be called from Python.
     type arguments replaced by integer arrays containing a
     representation of a pointer to the derived type, in the manner
     described in
-    (Pletzer2008)[https://doi.org/10.1109/MCSE.2008.94].
+    [Pletzer2008](https://doi.org/10.1109/MCSE.2008.94).
     This allows opaque references to the
     true Fortran derived type data structures to be passed back and
     forth between Python and Fortran.
@@ -152,55 +198,88 @@ Additional command line arguments can be passed to f90wrap to customize
 how the wrappers are generated. See the `examples/` directory to see how
 some of the options are used:
 
-    -h, --help            show this help message and exit
-    -v, --verbose         set verbosity level [default: None]
-    -V, --version         show program's version number and exit
-    -p PREFIX, --prefix PREFIX
-                          Prefix to prepend to arguments and subroutines.
-    -c [CALLBACK [CALLBACK ...]], --callback [CALLBACK [CALLBACK ...]]
-                          Names of permitted callback routines.
-    -C [CONSTRUCTORS [CONSTRUCTORS ...]], --constructors [CONSTRUCTORS [CONSTRUCTORS ...]]
-                          Names of constructor routines.
-    -D [DESTRUCTORS [DESTRUCTORS ...]], --destructors [DESTRUCTORS [DESTRUCTORS ...]]
-                          Names of destructor routines.
-    -k KIND_MAP, --kind-map KIND_MAP
-                          File containing Python dictionary in f2py_f2cmap
-                          format
-    -s STRING_LENGTHS, --string-lengths STRING_LENGTHS
-                          "File containing Python dictionary mapping string
-                          length names to values
-    -S DEFAULT_STRING_LENGTH, --default-string-length DEFAULT_STRING_LENGTH
-                          Default length of character strings
-    -i INIT_LINES, --init-lines INIT_LINES
-                          File containing Python dictionary mapping type names
-                          to necessary initialisation code
-    -I INIT_FILE, --init-file INIT_FILE
-                          Python source file containing code to be added to
-                          autogenerated __init__.py
-    -A ARGUMENT_NAME_MAP, --argument-name-map ARGUMENT_NAME_MAP
-                          File containing Python dictionary to rename Fortran
-                          arguments
-    --short-names SHORT_NAMES
-                          File containing Python dictionary mapping full type
-                          names to abbreviations
-    -m MOD_NAME, --mod-name MOD_NAME
-                          Name of output extension module (without .so
-                          extension).
-    -M, --move-methods    Convert routines with derived type instance as first
-                          agument into class methods
-    -P, --package         Generate a Python package instead of a single module
-    -a ABORT_FUNC, --abort-func ABORT_FUNC
-                          Name of Fortran subroutine to invoke if a fatal error
-                          occurs
-    --only [ONLY [ONLY ...]]
-                          Subroutines to include in wrapper
-    --skip [SKIP [SKIP ...]]
-                          Subroutines to exclude from wrapper         
+      -h, --help            show this help message and exit
+      -v, --verbose         set verbosity level [default: None]
+      -V, --version         show program's version number and exit
+      -p PREFIX, --prefix PREFIX
+                            Prefix to prepend to arguments and subroutines.
+      -c [CALLBACK [CALLBACK ...]], --callback [CALLBACK [CALLBACK ...]]
+                            Names of permitted callback routines.
+      -C [CONSTRUCTORS [CONSTRUCTORS ...]], --constructors [CONSTRUCTORS [CONSTRUCTORS ...]]
+                            Names of constructor routines.
+      -D [DESTRUCTORS [DESTRUCTORS ...]], --destructors [DESTRUCTORS [DESTRUCTORS ...]]
+                            Names of destructor routines.
+      -k KIND_MAP, --kind-map KIND_MAP
+                            File containting Python dictionary in f2py_f2cmap
+                            format
+      -s STRING_LENGTHS, --string-lengths STRING_LENGTHS
+                            "File containing Python dictionary mapping string
+                            length names to values
+      -S DEFAULT_STRING_LENGTH, --default-string-length DEFAULT_STRING_LENGTH
+                            Default length of character strings
+      -i INIT_LINES, --init-lines INIT_LINES
+                            File containing Python dictionary mapping type names
+                            to necessary initialisation code
+      -I INIT_FILE, --init-file INIT_FILE
+                            Python source file containing code to be added to
+                            autogenerated __init__.py
+      -A ARGUMENT_NAME_MAP, --argument-name-map ARGUMENT_NAME_MAP
+                            File containing Python dictionary to rename Fortran
+                            arguments
+      --short-names SHORT_NAMES
+                            File containing Python dictionary mapping full type
+                            names to abbreviations
+      --py-mod-names PY_MOD_NAMES
+                            File containing Python dictionary mapping Fortran
+                            module names to Python ones
+      --class-names CLASS_NAMES
+                            File containing Python dictionary mapping Fortran type
+                            names to Python classes
+      --joint-modules JOINT_MODULES
+                            File containing Python dictionary mapping modules
+                            defining times to list of additional modules defining
+                            methods
+      -m MOD_NAME, --mod-name MOD_NAME
+                            Name of output extension module (without .so
+                            extension).
+      -M, --move-methods    Convert routines with derived type instance as first
+                            agument into class methods
+      --shorten-routine-names
+                            Remove type name prefix from routine names, e.g.
+                            cell_symmetrise() -> symmetrise()
+      -P, --package         Generate a Python package instead of a single module
+      -a ABORT_FUNC, --abort-func ABORT_FUNC
+                            Name of Fortran subroutine to invoke if a fatal error
+                            occurs
+      --only [ONLY [ONLY ...]]
+                            Subroutines to include in wrapper
+      --skip [SKIP [SKIP ...]]
+                            Subroutines to exclude modules and subroutines from
+                            wrapper
+      --skip-types [SKIP_TYPES [SKIP_TYPES ...]]
+                            Subroutines to exclude types from wrapper
+      --force-public [FORCE_PUBLIC [FORCE_PUBLIC ...]]
+                            Names which are forced to be make public
+      --default-to-inout    Sets all arguments without intent to intent(inout)
+      --conf-file CONF_FILE
+                            Use Python configuration script to set options
+      --documentation-plugin DOCUMENTATION_PLUGIN
+                            Use Python script for expanding the documentation of
+                            functions and subroutines. All lines of the given tree
+                            object are passed to it with a reference to its
+                            documentation
+      --py-max-line-length PY_MAX_LINE_LENGTH
+                            Maximum length of lines in python files written.
+                            Default: 80
+      --f90-max-line-length F90_MAX_LINE_LENGTH
+                            Maximum length of lines in fortan files written.
+                            Default: 120
+         
 
 Author
 ------
 
-James Kermode: <james.kermode@gmail.com>
+James Kermode [jameskermode](https://github.com/jameskermode)
 
 Contributors
 ------------
@@ -212,3 +291,5 @@ Contributors
 - David Verelst [davidovitch](https://github.com/davidovitch)
 - James Orr [jamesorr](https://github.com/jamesorr)
 - [yvesch](https://github.com/yvesch)
+- [Matthias Cuntz](https://github.com/mcuntz)
+- Balthasar Reuter [reuterbal](https://github.com/reuterbal)

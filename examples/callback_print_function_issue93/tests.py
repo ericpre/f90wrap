@@ -17,14 +17,45 @@
 #
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with f90wrap. If not, see <http://www.gnu.org/licenses/>.
-# 
+#
 #  If you would like to license the source code under different terms,
 #  please contact James Kermode, james.kermode@gmail.com
-import pypandoc
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Jan 25 2018
 
-# converts markdown to reStructured
-z = pypandoc.convert('README.md','rst',format='markdown')
+@author: Gaetan Kenway
+"""
 
-# writes converted file
-with open('README.rst','w') as outfile:
-    outfile.write(z)
+from __future__ import print_function
+
+import unittest
+
+import numpy as np
+
+import CBF
+
+class TestExample(unittest.TestCase):
+
+    def setUp(self):
+
+        pass
+
+    def test_basic(self):
+        print(CBF._CBF.cback.write_message.__doc__)
+        def f(msg): 
+            print("Yo! " + msg)
+        CBF._CBF.pyfunc_print = f
+        # We need to prime the callback with a call "under the hood", not sure why.
+        CBF._CBF.cback.write_message('blah')
+        # Subsequently other calls to higher level functions work.
+        CBF.caller.test_write_msg()
+        CBF.caller.test_write_msg()
+        CBF.caller.test_write_msg_2()
+        # TODO?
+        # CBF.caller.test_return_msg()
+        # CBF.caller.test_return_msg()
+        # CBF.caller.test_return_msg_2()
+
+if __name__ == '__main__':
+    unittest.main()
